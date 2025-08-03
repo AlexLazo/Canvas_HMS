@@ -276,10 +276,12 @@
             grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
+
+
         
         @media print {
             body {
-                background: white;
+                background: white !important;
                 padding: 0;
             }
             
@@ -289,10 +291,6 @@
                 max-width: none;
             }
 
-            .controls {
-                display: none;
-            }
-
             .canvas-grid {
                 height: auto;
                 min-height: 800px;
@@ -300,113 +298,22 @@
         }
     </style>
     <script>
-        let isDarkMode = false;
-        let isPresentationMode = false;
-        let animationsEnabled = true;
-
-        // Función para descargar PDF
-        function downloadPDF() {
-            document.querySelector('.controls').style.display = 'none';
-            document.body.style.background = 'white';
+        // Función simple para imprimir (solo mantener la funcionalidad de print)
+        function printCanvas() {
             window.print();
-            setTimeout(() => {
-                document.querySelector('.controls').style.display = 'flex';
-                document.body.style.background = isDarkMode ? '#1a1a1a' : '#f8f9fa';
-            }, 100);
         }
 
-        // Función para descargar HTML
-        function downloadHTML() {
-            const htmlContent = document.documentElement.outerHTML;
-            const blob = new Blob([htmlContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'HMS_Business_Model_Canvas.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
+        // Función para mejorar la experiencia de impresión
+        window.addEventListener('beforeprint', function() {
+            document.body.style.background = 'white';
+        });
 
-        // Modo Dark/Light
-        function toggleDarkMode() {
-            isDarkMode = !isDarkMode;
-            document.body.classList.toggle('dark-mode', isDarkMode);
-            
-            const btn = document.getElementById('darkModeBtn');
-            btn.textContent = isDarkMode ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
-            btn.classList.toggle('active', isDarkMode);
-        }
+        window.addEventListener('afterprint', function() {
+            document.body.style.background = '#f8f9fa';
+        });
 
-        // Modo Presentación
-        function togglePresentationMode() {
-            isPresentationMode = !isPresentationMode;
-            const presentationDiv = document.getElementById('presentationMode');
-            const normalContainer = document.querySelector('.canvas-container');
-            
-            if (isPresentationMode) {
-                // Clonar el canvas para el modo presentación
-                const clonedCanvas = normalContainer.cloneNode(true);
-                presentationDiv.innerHTML = '';
-                presentationDiv.appendChild(clonedCanvas);
-                presentationDiv.style.display = 'flex';
-                
-                // Agregar controles al modo presentación
-                const controlsClone = document.querySelector('.controls').cloneNode(true);
-                presentationDiv.appendChild(controlsClone);
-            } else {
-                presentationDiv.style.display = 'none';
-            }
-            
-            const btn = document.getElementById('presentationBtn');
-            btn.textContent = isPresentationMode ? '📱 Salir Presentación' : '📺 Modo Presentación';
-            btn.classList.toggle('active', isPresentationMode);
-        }
-
-        // Activar/Desactivar animaciones
-        function toggleAnimations() {
-            animationsEnabled = !animationsEnabled;
-            const blocks = document.querySelectorAll('.canvas-block');
-            
-            if (animationsEnabled) {
-                blocks.forEach((block, index) => {
-                    block.classList.add('animate-in', `animate-delay-${index + 1}`);
-                });
-            } else {
-                blocks.forEach(block => {
-                    block.classList.remove('animate-in');
-                    block.className = block.className.replace(/animate-delay-\d+/g, '');
-                });
-            }
-            
-            const btn = document.getElementById('animationsBtn');
-            btn.textContent = animationsEnabled ? '🎬 Sin Animaciones' : '✨ Con Animaciones';
-            btn.classList.toggle('active', animationsEnabled);
-        }
-
-        // Zoom
-        let zoomLevel = 1;
-        function zoomCanvas(direction) {
-            const container = document.querySelector('.canvas-container');
-            
-            if (direction === 'in') {
-                zoomLevel = Math.min(zoomLevel + 0.1, 2);
-            } else {
-                zoomLevel = Math.max(zoomLevel - 0.1, 0.5);
-            }
-            
-            container.style.transform = `scale(${zoomLevel})`;
-            container.style.transformOrigin = 'center center';
-            
-            // Actualizar botones
-            document.getElementById('zoomInBtn').disabled = zoomLevel >= 2;
-            document.getElementById('zoomOutBtn').disabled = zoomLevel <= 0.5;
-        }
-
-        // Inicializar tooltips y animaciones al cargar
+        // Agregar tooltips informativos
         document.addEventListener('DOMContentLoaded', function() {
-            // Agregar tooltips a los bloques
             const tooltips = {
                 'key-partners': 'Socios estratégicos necesarios para el éxito del negocio',
                 'key-activities': 'Actividades principales que debe realizar la empresa',
@@ -422,39 +329,13 @@
             Object.entries(tooltips).forEach(([className, tooltip]) => {
                 const element = document.querySelector(`.${className} .block-title`);
                 if (element) {
-                    element.classList.add('tooltip');
-                    element.setAttribute('data-tooltip', tooltip);
+                    element.setAttribute('title', tooltip);
                 }
             });
-
-            // Activar animaciones iniciales
-            if (animationsEnabled) {
-                toggleAnimations();
-            }
-        });
-
-        // Salir del modo presentación con ESC
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && isPresentationMode) {
-                togglePresentationMode();
-            }
         });
     </script>
 </head>
 <body>
-    <!-- Controles avanzados -->
-    <div class="controls">
-        <button class="control-btn" onclick="downloadPDF()">📄 PDF</button>
-        <button class="control-btn" onclick="downloadHTML()">💾 HTML</button>
-        <button class="control-btn" id="darkModeBtn" onclick="toggleDarkMode()">🌙 Modo Oscuro</button>
-        <button class="control-btn" id="presentationBtn" onclick="togglePresentationMode()">📺 Presentación</button>
-        <button class="control-btn" id="animationsBtn" onclick="toggleAnimations()">🎬 Animaciones</button>
-        <button class="control-btn" id="zoomInBtn" onclick="zoomCanvas('in')">🔍 Zoom +</button>
-        <button class="control-btn" id="zoomOutBtn" onclick="zoomCanvas('out')">🔍 Zoom -</button>
-    </div>
-
-    <!-- Modo Presentación -->
-    <div id="presentationMode" class="presentation-mode"></div>
 
     <div class="canvas-container">
         <div class="header">
@@ -825,6 +706,9 @@
         <div class="footer">
             <p><strong>HMS - Hotel Management System</strong> | Business Model Canvas v2.0 | Agosto 2025</p>
             <p>Transformando la gestión hotelera en Centroamérica 🌎</p>
+            <p style="font-size: 0.75em; margin-top: 10px; opacity: 0.8;">
+                💡 <em>Para imprimir o exportar a PDF: Ctrl+P (Windows) o Cmd+P (Mac)</em>
+            </p>
         </div>
     </div>
 </body>
